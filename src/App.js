@@ -1,12 +1,24 @@
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import axios from 'axios';
 import ColorDisplay from './components/ColorDisplay';
 
 function App() {
-  let [colors, setColors] = useState([]);
+  const [colors, setColors] = useState([]);
+  const [bgColor, setbgColor] = useState('#0000')
 
-  useEffect( () => {
-    axios.get('https://random-data-api.com/api/color/random_color?size=10')
+  useEffect(() => {
+    memoizedCallback();
+  }, []);
+
+  const memoizedCallback = useCallback(
+    () => {
+      getNewColors();
+    },[colors]
+  );
+
+  const getNewColors = () => {
+    axios
+    .get('https://random-data-api.com/api/color/random_color?size=10')
     .then((res) => {
       const colorData = res.data;
       setColors(colorData);
@@ -14,21 +26,26 @@ function App() {
     .catch((err) => {
       console.log("Error fetching from Random Data API: ", err);
     });
-  }, []);
+  };
+
+  const setBackgroundColor = (value) => {
+    setbgColor(value);
+  }; 
 
   return (
-    <div className="App">
+    <div style={{textAlign: 'center', backgroundColor: `${bgColor}`}}>
       <h1>Background Color Picker</h1>
-      <button>Get New Colors</button>
-
-      <div>
+      <button onClick={memoizedCallback}>Get New Colors</button>
+      <main>
         {colors.map((color) =>
           <ColorDisplay 
+            key={color.id}
             hex_value={color.hex_value}
             hsl_value = {color.hsl_value}
+            setBackgroundColor = {setBackgroundColor}
           /> 
         )}
-      </div>
+      </main>
     </div>
   );
 }
